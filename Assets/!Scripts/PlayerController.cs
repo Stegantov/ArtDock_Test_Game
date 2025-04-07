@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(Animator))]
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
@@ -12,11 +13,13 @@ public class PlayerController : MonoBehaviour
     private CharacterController controller;
     private Vector2 moveInput;
     private Transform cam;
+    private Animator animator;
 
     private void Awake()
     {
         inputActions = new PlayerInputActions();
         controller = GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();
         cam = FindObjectOfType<Camera>().transform;
     }
 
@@ -41,17 +44,25 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        Vector3 direction = new Vector3(moveInput.x, 0, moveInput.y);
-        if (direction.magnitude >= 0.1f)
+        
+        Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
+        Vector3 moveDirection = Vector3.zero;
+
+        if (inputDirection.magnitude >= 0.1f)
         {
-            Vector3 moveDir = cam.forward * moveInput.y + cam.right * moveInput.x;
-            moveDir.y = 0;
-            moveDir.Normalize();
+            moveDirection = cam.forward * moveInput.y + cam.right * moveInput.x;
+            moveDirection.y = 0f;
+            moveDirection.Normalize();
 
-            controller.Move(moveDir * moveSpeed * Time.deltaTime);
+            controller.Move(moveDirection * moveSpeed * Time.deltaTime);
 
-            Quaternion toRotation = Quaternion.LookRotation(moveDir, Vector3.up);
+            
+            Quaternion toRotation = Quaternion.LookRotation(moveDirection, Vector3.up);
             transform.rotation = Quaternion.Lerp(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
         }
+        
+        animator.SetFloat("Speed", inputDirection.magnitude);
+        animator.SetFloat("Horizontal", moveInput.x);
+        animator.SetFloat("Vertical", moveInput.y);
     }
 }
